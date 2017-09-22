@@ -7,7 +7,7 @@ var {users} = require('./models/users')
 
 var app = express()
 
-app.use(bodyParser.json()) //middleware
+app.use(bodyParser.json()) //middleware parse request body
 
 app.post('/todos', (req, res) => {
     var todo = new Todo({
@@ -27,3 +27,7 @@ app.post('/todos', (req, res) => {
 app.listen(3000, () => {
     console.log('Started on port 3000')
 })
+
+module.exports = {
+    app
+}
