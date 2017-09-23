@@ -8,6 +8,7 @@ const {ObjectID} = require('mongodb')
 var {mongoose} = require('./db/mongoose')
 var {Todo} = require('./models/todo')
 var {User} = require('./models/users')
+var {authenticate} = require('./middleware/authenticate')
 
 var app = express()
 const port = process.env.PORT || 3000
@@ -106,7 +107,7 @@ app.patch('/todos/:id', (req, res) => {
 
 })
 
-// POST /users
+// POST /users sign up route
 app.post('/users', (req, res) => {
     var body = _.pick(req.body, ['email', 'password'])
     var user = new User(body)
@@ -115,11 +116,17 @@ app.post('/users', (req, res) => {
         return user.generateAuthToken()
         // res.send(user)
     }).then((token) => {
-        res.header('x-auth', token).send(user)
+        res.header('x-auth', token).send(user) //set response header (key, value)
     }).catch((e) => {
         res.status(400).send(e)
     })
 
+})
+
+
+
+app.get('/users/me', authenticate ,(req, res) => { //authenticate as middleware
+    res.send(req.user)
 
 })
 app.listen(port, () => {

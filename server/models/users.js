@@ -33,13 +33,33 @@ var UserSchema = new mongoose.Schema({
     }]
 })
 
-UserSchema.methods.toJSON = function () {
+//override
+UserSchema.methods.toJSON = function () { // it is an instance method
     var user = this
     var userObject = user.toObject()
 
     return _.pick(userObject, ['_id', 'email'])
 }
 
+UserSchema.statics.findByToken = function (token) { // this is an model method
+    var User = this
+    var decoded   //
+
+    try {
+        decoded = jwt.verify(token, 'somesecret')
+    } catch (e) {
+        // return new Promise((resolve, reject) => { //if err, promise will be return by findByToken
+        //     reject()
+        // })
+        return Promise.reject()
+    }
+
+    return User.findOne({
+        _id: decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+    })
+}
 UserSchema.methods.generateAuthToken = function () { //arrow function doesnot bind this keyword
     var user = this
     var access = 'auth'
