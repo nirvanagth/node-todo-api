@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const jwt = require('jsonwebtoken')
 const _ = require('lodash')
+const bcrypt = require('bcryptjs')
 
 var UserSchema = new mongoose.Schema({
     email: {
@@ -41,6 +42,21 @@ UserSchema.methods.toJSON = function () { // it is an instance method
     return _.pick(userObject, ['_id', 'email'])
 }
 
+UserSchema.methods.generateAuthToken = function () { //arrow function doesnot bind this keyword
+    var user = this
+    var access = 'auth'
+    var token = jwt.sign({_id: user._id.toHexString(), access}, 'somesecret').toString()
+
+    user.tokens.push({
+        access,
+        token
+    })
+
+    return user.save().then(() => {
+        return token
+    })
+}
+
 UserSchema.statics.findByToken = function (token) { // this is an model method
     var User = this
     var decoded   //
@@ -60,21 +76,26 @@ UserSchema.statics.findByToken = function (token) { // this is an model method
         'tokens.access': 'auth'
     })
 }
-UserSchema.methods.generateAuthToken = function () { //arrow function doesnot bind this keyword
+
+
+
+UserSchema.pre('save', function (next) { //middleware
     var user = this
-    var access = 'auth'
-    var token = jwt.sign({_id: user._id.toHexString(), access}, 'somesecret').toString()
 
-    user.tokens.push({
-        access,
-        token
-    })
-
-    return user.save().then(() => {
-        return token
-    })
-}
-
+    if (user.isModified('password')) {
+        //user.password
+        //user.password = hash?
+        //next
+        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(user.password, salt, (err, hash) => {
+                user.password = hash
+                next()
+            })
+        })
+    } else {
+        next()
+    }
+})
 var User = mongoose.model('User', UserSchema)
 
 module.exports = {
