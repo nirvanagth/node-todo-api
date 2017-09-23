@@ -42,7 +42,7 @@ UserSchema.methods.toJSON = function () { // it is an instance method
     return _.pick(userObject, ['_id', 'email'])
 }
 
-UserSchema.methods.generateAuthToken = function () { //arrow function doesnot bind this keyword
+UserSchema.methods.generateAuthToken = function () { //arrow function does not bind this keyword
     var user = this
     var access = 'auth'
     var token = jwt.sign({_id: user._id.toHexString(), access}, 'somesecret').toString()
