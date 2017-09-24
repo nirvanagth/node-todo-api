@@ -114,6 +114,7 @@ UserSchema.pre('save', function (next) { //middleware
         next()
     }
 })
+
 var User = mongoose.model('User', UserSchema)
 
 module.exports = {
