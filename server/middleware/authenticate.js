@@ -9,11 +9,12 @@ var authenticate = (req, res, next) => {
             return Promise.reject()
         }
 
+        //modify req object
         req.user = user
         req.token = token
         next()
     }).catch((e) => {
-        res.status(401).send()
+        res.status(401).send() //authentication is required
     })
 }
 

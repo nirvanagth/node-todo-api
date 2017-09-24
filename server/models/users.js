@@ -22,6 +22,8 @@ var UserSchema = new mongoose.Schema({
         minlength: 6,
 
     },
+    //sent back from login or sign up req, client use this token to authenticate other request
+    // pass along as header, make that call success after authenticating
     tokens: [{
         access: {
             type: String,
@@ -35,6 +37,7 @@ var UserSchema = new mongoose.Schema({
 })
 
 //override
+//determine what items that can be returned when a mongoose model is converted into a JSON value
 UserSchema.methods.toJSON = function () { // it is an instance method
     var user = this
     var userObject = user.toObject()
@@ -42,7 +45,9 @@ UserSchema.methods.toJSON = function () { // it is an instance method
     return _.pick(userObject, ['_id', 'email'])
 }
 
-UserSchema.methods.generateAuthToken = function () { //arrow function does not bind this keyword
+// add token to individual user document, save that and return the token to client
+//arrow function does not bind this keyword
+UserSchema.methods.generateAuthToken = function () {
     var user = this
     var access = 'auth'
     var token = jwt.sign({_id: user._id.toHexString(), access}, 'somesecret').toString()
@@ -57,6 +62,20 @@ UserSchema.methods.generateAuthToken = function () { //arrow function does not b
     })
 }
 
+UserSchema.methods.removeToken = function (token) {
+    var user = this
+
+    return user.update({
+        $pull: {
+            tokens: {
+                token: token
+            }
+        }
+    })
+}
+
+//custom model method, take tht jwt token user sends and one of their secure request
+//we will find the individual user and we will return that user to the caller
 UserSchema.statics.findByToken = function (token) { // this is an model method
     var User = this
     var decoded   //
@@ -69,7 +88,7 @@ UserSchema.statics.findByToken = function (token) { // this is an model method
         // })
         return Promise.reject()
     }
-
+    //if success, query nested object properties
     return User.findOne({
         _id: decoded._id,
         'tokens.token': token,
@@ -116,6 +135,7 @@ UserSchema.pre('save', function (next) { //middleware
 })
 
 var User = mongoose.model('User', UserSchema)
+
 
 module.exports = {
     User

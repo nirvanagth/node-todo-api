@@ -114,9 +114,10 @@ app.post('/users', (req, res) => {
 
     user.save().then((user) => {
         return user.generateAuthToken()
+
         // res.send(user)
     }).then((token) => {
-        res.header('x-auth', token).send(user) //set response header (key, value)
+        res.header('x-auth', token).send(user) //set custom response header (key, value)
     }).catch((e) => {
         res.status(400).send(e)
     })
@@ -124,7 +125,7 @@ app.post('/users', (req, res) => {
 })
 
 
-
+//example to make a private route
 app.get('/users/me', authenticate ,(req, res) => { //authenticate as middleware
     res.send(req.user)
 
@@ -143,6 +144,15 @@ app.post('/users/login', (req, res) => {
         res.status(400).send()
     })
 
+})
+
+//DELETE
+app.delete('/users/me/token', authenticate, (req, res) => {
+    req.user.removeToken(req.token).then(() => {
+        res.status(200).send()
+    }, () => {
+        res.status(400).send()
+    })
 })
 
 app.listen(port, () => {
