@@ -50,7 +50,7 @@ UserSchema.methods.toJSON = function () { // it is an instance method
 UserSchema.methods.generateAuthToken = function () {
     var user = this
     var access = 'auth'
-    var token = jwt.sign({_id: user._id.toHexString(), access}, 'somesecret').toString()
+    var token = jwt.sign({_id: user._id.toHexString(), access}, process.env.JWT_SECRET).toString()
 
     user.tokens.push({
         access,
@@ -81,7 +81,7 @@ UserSchema.statics.findByToken = function (token) { // this is an model method
     var decoded   //
 
     try {
-        decoded = jwt.verify(token, 'somesecret')
+        decoded = jwt.verify(token, process.env.JWT_SECRET)
     } catch (e) {
         // return new Promise((resolve, reject) => { //if err, promise will be return by findByToken
         //     reject()
